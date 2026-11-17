@@ -143,10 +143,45 @@
         // Controles SNES
         EJS_controlScheme = "n64";
 
-    </script>
+</script>
 
+<!-- LIBERACAO DE AUDIO PARA IOS -->
+<script>
+(function () {
+    const OriginalAudioContext =
+        window.AudioContext || window.webkitAudioContext;
 
-    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+    if (!OriginalAudioContext) return;
+
+    const contexts = new Set();
+
+    const WrappedAudioContext = new Proxy(OriginalAudioContext, {
+        construct(target, args, newTarget) {
+            const context = Reflect.construct(target, args, newTarget);
+            contexts.add(context);
+            context.resume().catch(function () {});
+            return context;
+        }
+    });
+
+    window.AudioContext = WrappedAudioContext;
+    window.webkitAudioContext = WrappedAudioContext;
+
+    function liberarAudio() {
+        contexts.forEach(function (context) {
+            if (context.state !== "running") {
+                context.resume().catch(function () {});
+            }
+        });
+    }
+
+    document.addEventListener("touchend", liberarAudio, true);
+    document.addEventListener("click", liberarAudio, true);
+    document.addEventListener("pointerup", liberarAudio, true);
+})();
+</script>
+
+<script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
 
 
     <script>
